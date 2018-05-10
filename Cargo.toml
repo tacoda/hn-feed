@@ -6,3 +6,4 @@ authors = ["Ian Johnson <ianj@menudrive.com>"]
 [dependencies]
 reqwest = "0.8.5"
 select = "0.4.2"
+prettytable-rs = "0.7.0"

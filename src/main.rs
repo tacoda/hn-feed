@@ -1,8 +1,11 @@
+#[macro_use]
+extern crate prettytable;
 extern crate reqwest;
 extern crate select;
 
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
+use prettytable::Table;
 
 fn main() {
     hacker_news("https://news.ycombinator.com");
@@ -15,21 +18,29 @@ fn hacker_news(url: &str) {
 
     let document = Document::from_read(resp).unwrap();
 
-    // finding all instances of our class of interest
+    let mut table = Table::new();
+
+    // same as before
     for node in document.find(Class("athing")) {
-        // grabbing the story rank
         let rank = node.find(Class("rank")).next().unwrap();
-        // finding class, then selecting article title
         let story = node.find(Class("title").descendant(Name("a")))
             .next()
             .unwrap()
             .text();
-        // printing out | rank | story headline
-        println!("\n | {} | {}\n", rank.text(), story);
-        // same as above
-        let url = node.find(Class("title").descendant(Name("a"))).next().unwrap();
-        // however, we don't grab text
-        // instead find the "href" attribute, which gives us the url
-        println!("{:?}\n", url.attr("href").unwrap());
+        let url = node.find(Class("title").descendant(Name("a")))
+            .next()
+            .unwrap();
+        let url_txt = url.attr("href").unwrap();
+        // shorten strings to make table aesthetically appealing
+        // otherwise table will look mangled by long URLs
+        let url_trim = url_txt.trim_left_matches('/');
+        let rank_story = format!(" | {} | {}", rank.text(), story);
+        // [FdBybl->] specifies row formatting
+        // F (foreground) d (black text)
+        // B (background) y (yellow text) l (left-align)
+        table.add_row(row![FdBybl->rank_story]);
+        table.add_row(row![Fy->url_trim]);
     }
+    // print table to stdout
+    table.printstd();
 }
